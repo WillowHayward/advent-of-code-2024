@@ -9,7 +9,9 @@ pub fn run(challenge: &String, input: String) -> String {
 
 fn run_silver(input: String) -> String {
     let lists = parse_lists(input);
-    "tada".to_string()
+    let solution = compare_lists(lists.0, lists.1);
+
+    solution.to_string()
 }
 
 fn parse_lists(input: String) -> (Vec<i32>, Vec<i32>) {
@@ -34,6 +36,22 @@ fn parse_line(line: &str) -> (i32, i32) {
     let chunks: Vec<i32> = line.split_whitespace().map(|chunk| chunk.parse().unwrap()).collect();
 
     (chunks[0], chunks[1])
+}
+
+// Assumes lists are sorted and of equal length
+fn compare_lists(left_list: Vec<i32>, right_list: Vec<i32>) -> i32 {
+    let length = left_list.len();
+    let mut total_distance: i32 = 0;
+
+    for i in 0..length {
+        let left = left_list[i];
+        let right = right_list[i];
+
+        let difference = left - right;
+        total_distance += difference.abs();
+    }
+
+    total_distance
 }
 
 fn run_gold(input: String) -> String {
