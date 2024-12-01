@@ -2,6 +2,7 @@ use std::env;
 use std::fs::File;
 use std::io::Read;
 
+mod day_1;
 // TODO: Lotta unwrapping in this here entry point. Maybe look into that.
 
 fn main() {
@@ -13,12 +14,12 @@ fn main() {
     let challenge = args.get(2).unwrap();
     let input = load_input(day);
 
-    println!("{}", input);
-
-    match day {
-        1 => todo!(),
+    let solution = match day {
+        1 => day_1::run(challenge, input),
         _ => panic!("No implementation for {}", day),
-    }
+    };
+
+    print!("{}", solution);
 }
 
 fn load_input(day: i32) -> String {
@@ -28,5 +29,4 @@ fn load_input(day: i32) -> String {
     file.read_to_string(&mut contents).unwrap();
 
     contents
-    //file.read
 }
