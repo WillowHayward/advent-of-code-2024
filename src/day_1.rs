@@ -85,14 +85,17 @@ fn count_duplicates(list: Vec<i32>) -> HashMap<i32, i32> {
     duplicates
 }
 
-fn calculate_similarity_score(left_duplicates: HashMap<i32, i32>, right_duplicates: HashMap<i32, i32>) -> i32 {
+fn calculate_similarity_score(
+    left_duplicates: HashMap<i32, i32>,
+    right_duplicates: HashMap<i32, i32>,
+) -> i32 {
     let mut score = 0;
 
     for i in left_duplicates.keys() {
         let left_value = left_duplicates.get(&i).unwrap();
         let right_value: i32 = match right_duplicates.get(&i) {
             Some(v) => *v,
-            None => 0
+            None => 0,
         };
 
         score += i * left_value * right_value;
@@ -115,8 +118,7 @@ mod tests {
 
     #[test]
     fn test_parse_list() {
-        let input_1 = "\
-1    8
+        let input_1 = "1    8
 3    1
 2    4"
             .to_string();
@@ -129,11 +131,7 @@ mod tests {
     fn test_count_duplicates() {
         let input_1 = vec![1, 2, 3, 3, 3, 1];
         let test_1 = count_duplicates(input_1);
-        let expected_1 = HashMap::from([
-            (1, 2),
-            (2, 1),
-            (3, 3)
-        ]);
+        let expected_1 = HashMap::from([(1, 2), (2, 1), (3, 3)]);
         assert_eq!(test_1, expected_1);
     }
 }
