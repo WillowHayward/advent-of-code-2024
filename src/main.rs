@@ -3,6 +3,7 @@ use std::fs::File;
 use std::io::Read;
 
 mod day_1;
+mod day_2;
 // TODO: Lotta unwrapping in this here entry point. Maybe look into that.
 
 fn main() {
@@ -16,6 +17,7 @@ fn main() {
 
     let solution = match day {
         1 => day_1::run(challenge, input),
+        2 => day_2::run(challenge, input),
         _ => panic!("No implementation for {}", day),
     };
 
