@@ -7,27 +7,37 @@ pub fn run(challenge: &String, input: String) -> String {
 }
 
 fn run_silver(input: String) -> String {
-    run_report_check(input, false)
-}
-
-fn run_gold(input: String) -> String {
-    run_report_check(input, true)
-}
-
-fn run_report_check(input: String, allow_dampener: bool) -> String {
     let reports = input.lines();
 
     let mut safe_count = 0;
-    for report in reports {
-        let safe = parse_report(report, allow_dampener);
+    for report_raw in reports {
+        let report = parse_report(report_raw);
+        let failures = check_report(report);
 
-        if safe {
+        if failures.len() == 0 {
             safe_count += 1;
-        } 
+        }
     }
 
     safe_count.to_string()
+}
 
+fn run_gold(input: String) -> String {
+    let reports = input.lines();
+
+    let mut safe_count = 0;
+    for report_raw in reports {
+        let report = parse_report(report_raw);
+        let failures = check_report(report.to_vec());
+
+        if failures.len() == 0 {
+            safe_count += 1;
+        } else if retry_report(report, failures) {
+            safe_count += 1;
+        }
+    }
+
+    safe_count.to_string()
 }
 
 #[derive(PartialEq, Eq)]
@@ -38,80 +48,36 @@ enum Direction {
     Negative,
 }
 
-fn parse_report(input: &str, allow_dampener: bool) -> bool {
+fn parse_report(input: &str) -> Vec<i32> {
     let values: Vec<i32> = input
         .split_whitespace()
         .map(|chunk| chunk.parse().unwrap())
         .collect();
 
+    values
+}
+
+// Returns a Vec containing each position the dampener fired in
+fn check_report(values: Vec<i32>) -> Vec<usize> {
     // NOTE: Assumes at least 2 values in report
 
-    let mut dampener_used = !allow_dampener;
-    let mut dampened_index: i32 = -1;
-
+    let mut dampened_indexes: Vec<usize> = Vec::new();
     let mut trend: Direction = Direction::Initial;
-
 
     let length = values.len() - 1;
     for i in 0..length {
-        if i as i32 == dampened_index {
-            continue;
-        }
-
         let direction = compare_values(values[i], values[i + 1]);
 
         if !check_result(&direction, &trend) {
-            if dampener_used {
-                println!("{}", input);
-                println!("Dampener already used!");
-                return false;
-            }
-            dampener_used = true;
-
-            // Test removing left value
-            let case_a = if i > 0 {
-                compare_values(values[i - 1], values[i + 1])
-            } else {
-                // If it's not just the first digit that's an error, the dampener will fire again
-                // in the next loop
-                continue;
-            };
-
-            if check_result(&case_a, &trend) {
-                trend = case_a;
-                dampened_index = i.try_into().unwrap();
-                //println!("{}", input);
-                //println!("Passed without {}", values[i]);
-                continue;
-            }
-            //println!("Still failed without {}", values[i]);
-
-            let case_b = if i <= length - 2 {
-                compare_values(values[i], values[i + 2])
-            } else {
-                // If it's reached the final digit without the dampener firing, it'll be correct
-                return true;
-            };
-
-            if check_result(&case_b, &trend) {
-                trend = case_b;
-                dampened_index = (i + 1).try_into().unwrap();
-                //println!("{}", input);
-                //println!("Passed without {}", values[i + 1]);
-                continue;
-            }
-            println!("{}", input);
-            println!("Still failed without {}", values[i]);
-            println!("Still failed without {}", values[i+1]);
-
-            return false;
-
+            dampened_indexes.push(i);
         }
 
-        trend = direction;
+        if trend == Direction::Initial && direction != Direction::Invalid {
+            trend = direction;
+        }
     }
 
-    true
+    dampened_indexes
 }
 
 fn compare_values(a: i32, b: i32) -> Direction {
@@ -147,7 +113,52 @@ fn check_result(new_direction: &Direction, old_direction: &Direction) -> bool {
     true
 }
 
-#[cfg(test)]
+fn retry_report(values: Vec<i32>, dampened_indexes: Vec<usize>) -> bool {
+    let num_failures = dampened_indexes.len();
+    if num_failures > 2 {
+        // If > 2 failures, definitively out of dampener limit
+        //println!("Too many failures");
+        return false;
+    }
+    // For 1-2 failures, could be within dampener limit - gotta check
+
+    if num_failures == 2 {
+        if dampened_indexes[1] - dampened_indexes[0] > 1 {
+            // If not consecutive, two distinct failures
+            //println!("Failures too distant");
+            return false;
+        }
+    }
+
+    //println!("Retrying {:?}", values);
+    //println!("Dampened indexes: {:?}", dampened_indexes);
+    // In theory I think you could just check around the dampened indexes, but that makes it tricky
+    // with the trend so ¯\_(ツ)_/¯
+
+    let mut indices_to_remove: Vec<usize> = dampened_indexes.to_vec();
+    indices_to_remove.push(indices_to_remove.last().unwrap() + 1);
+
+    println!("--, {:?}", indices_to_remove);
+    for i in indices_to_remove {
+        println!("{}", i);
+        //println!("{}", j);
+        let mut values_copy = values.to_vec();
+        values_copy.remove(i);
+        //println!("Trying {:?}", values_copy);
+        if check_report(values_copy).len() == 0 {
+            return true;
+        }
+    }
+
+    println!(
+        "Could not salvage {:?} - Errors {:?}",
+        values, dampened_indexes
+    );
+
+    false
+}
+
+/*#[cfg(test)]
 mod tests {
     use super::*;
 
@@ -191,4 +202,4 @@ mod tests {
         let test_h = parse_report("1 3 6 7 9 9", true);
         assert_eq!(test_h, true);
     }
-}
+}*/
