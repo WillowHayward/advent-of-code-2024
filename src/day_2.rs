@@ -68,13 +68,16 @@ fn check_report(values: Vec<i32>) -> Vec<usize> {
     for i in 0..length {
         let direction = compare_values(values[i], values[i + 1]);
 
+        if trend == Direction::Initial && direction != Direction::Invalid {
+            trend = compare_values(values[i], values[i + 1]); // Sorry rust borrow checker, this
+            // was easier than learning how to handle you today
+        }
+
+
         if !check_result(&direction, &trend) {
             dampened_indexes.push(i);
         }
 
-        if trend == Direction::Initial && direction != Direction::Invalid {
-            trend = direction;
-        }
     }
 
     dampened_indexes
@@ -113,8 +116,20 @@ fn check_result(new_direction: &Direction, old_direction: &Direction) -> bool {
     true
 }
 
+// All aboard the Brute Force Express
 fn retry_report(values: Vec<i32>, dampened_indexes: Vec<usize>) -> bool {
-    let num_failures = dampened_indexes.len();
+    let length = values.len();
+    for i in 0..length { // Choo chooooooo
+        //println!("{}", i);
+        //println!("{}", j);
+        let mut values_copy = values.to_vec();
+        values_copy.remove(i);
+        //println!("Trying {:?}", values_copy);
+        if check_report(values_copy).len() == 0 {
+            return true;
+        }
+    }
+    /*let num_failures = dampened_indexes.len();
     if num_failures > 2 {
         // If > 2 failures, definitively out of dampener limit
         //println!("Too many failures");
@@ -123,7 +138,7 @@ fn retry_report(values: Vec<i32>, dampened_indexes: Vec<usize>) -> bool {
     // For 1-2 failures, could be within dampener limit - gotta check
 
     if num_failures == 2 {
-        if dampened_indexes[1] - dampened_indexes[0] > 1 {
+        if dampened_indexes[1] - dampened_indexes[0] > 2 {
             // If not consecutive, two distinct failures
             //println!("Failures too distant");
             return false;
@@ -136,11 +151,15 @@ fn retry_report(values: Vec<i32>, dampened_indexes: Vec<usize>) -> bool {
     // with the trend so ¯\_(ツ)_/¯
 
     let mut indices_to_remove: Vec<usize> = dampened_indexes.to_vec();
-    indices_to_remove.push(indices_to_remove.last().unwrap() + 1);
+    let length = dampened_indexes.len();
+    for i in 0..length {
+        indices_to_remove.push(dampened_indexes[i] + 1)
+    }
+    //indices_to_remove.push(indices_to_remove.last().unwrap() + 1);
 
-    println!("--, {:?}", indices_to_remove);
+    //println!("--, {:?}", indices_to_remove);
     for i in indices_to_remove {
-        println!("{}", i);
+        //println!("{}", i);
         //println!("{}", j);
         let mut values_copy = values.to_vec();
         values_copy.remove(i);
@@ -151,18 +170,19 @@ fn retry_report(values: Vec<i32>, dampened_indexes: Vec<usize>) -> bool {
     }
 
     println!(
-        "Could not salvage {:?} - Errors {:?}",
+        //"Could not salvage {:?} - Errors {:?}",
+        "{:?} {:?}",
         values, dampened_indexes
-    );
+    );*/
 
     false
 }
 
-/*#[cfg(test)]
+#[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
+    /*#[test]
     fn test_parse_report_silver() {
         let test_a = parse_report("7 6 4 2 1", false);
         assert_eq!(test_a, true);
@@ -201,5 +221,12 @@ mod tests {
         // Error at last position
         let test_h = parse_report("1 3 6 7 9 9", true);
         assert_eq!(test_h, true);
-    }
-}*/
+    }*/
+
+    /*#[test]
+    fn test_misc() {
+        let test_a_input = parse_report("94 95 93 90 93");
+        let test_a = check_report(test_a_input);
+        assert_eq!(test_a, vec![1, 2,
+    }*/
+}
